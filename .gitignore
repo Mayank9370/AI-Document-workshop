@@ -1,0 +1,67 @@
+# Dependencies
+node_modules/
+.pnp/
+.pnp.js
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Environment files and secrets
+.env
+.env.*
+.env.local
+.env.development.local
+.env.test.local
+.env.production
+.env.production.local
+*.pem
+*.key
+
+# Preserve example environment files
+!.env.example
+!frontend/.env.example
+!backend/.env.example
+
+# User uploads and document binary storage
+backend/uploads/
+uploads/
+*.pdf
+!backend/src/scripts/fixtures/*.pdf
+
+# Scratch & temporary directories
+scratch/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Editor and OS files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db
+
+# Testing and coverage
+coverage/
+.nyc_output/
+
+# Cache and temporary files
+.cache/
+.turbo/
+.eslintcache
+*.tsbuildinfo
+tmp/
+temp/

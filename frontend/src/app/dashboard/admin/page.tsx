@@ -10,7 +10,6 @@ import {
   ShieldCheck,
   ShieldAlert,
   Users,
-  UserCheck,
   UserPlus,
   FileText,
   Layers,
@@ -186,7 +185,7 @@ export default function AdminDashboardPage() {
             </div>
           )}
 
-          {/* Top Metrics Grid */}
+          {/* Top Metrics Grid (100% Backed by Actual Database Records) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Metric 1: Total Users */}
             <div className="p-5 rounded-2xl bg-slate-900/60 border border-slate-800/80 hover:border-slate-700/80 transition space-y-2">
@@ -206,25 +205,7 @@ export default function AdminDashboardPage() {
               </p>
             </div>
 
-            {/* Metric 2: Active Users */}
-            <div className="p-5 rounded-2xl bg-slate-900/60 border border-slate-800/80 hover:border-slate-700/80 transition space-y-2">
-              <div className="flex items-center justify-between text-slate-400 text-xs">
-                <span>Active Users (30d)</span>
-                <UserCheck className="w-4 h-4 text-emerald-400" />
-              </div>
-              <div className="text-2xl font-bold text-emerald-400 tracking-tight">
-                {isLoading ? (
-                  <div className="h-7 w-16 bg-slate-800 animate-pulse rounded" />
-                ) : (
-                  stats?.users.active.toLocaleString() ?? '0'
-                )}
-              </div>
-              <p className="text-[11px] text-slate-400">
-                Active within the last 30 days
-              </p>
-            </div>
-
-            {/* Metric 3: New Users (7d / 30d) */}
+            {/* Metric 2: New Users (7d / 30d) */}
             <div className="p-5 rounded-2xl bg-slate-900/60 border border-slate-800/80 hover:border-slate-700/80 transition space-y-2">
               <div className="flex items-center justify-between text-slate-400 text-xs">
                 <span>New Users</span>
@@ -245,7 +226,7 @@ export default function AdminDashboardPage() {
               </p>
             </div>
 
-            {/* Metric 4: Total Documents */}
+            {/* Metric 3: Total Documents */}
             <div className="p-5 rounded-2xl bg-slate-900/60 border border-slate-800/80 hover:border-slate-700/80 transition space-y-2">
               <div className="flex items-center justify-between text-slate-400 text-xs">
                 <span>Total Documents</span>
@@ -262,6 +243,24 @@ export default function AdminDashboardPage() {
                 <span className="text-emerald-400 font-medium">{stats?.documents.ready ?? 0} ready</span>
                 <span>•</span>
                 <span className="text-rose-400 font-medium">{stats?.documents.failed ?? 0} failed</span>
+              </p>
+            </div>
+
+            {/* Metric 4: Total Chat Messages */}
+            <div className="p-5 rounded-2xl bg-slate-900/60 border border-slate-800/80 hover:border-slate-700/80 transition space-y-2">
+              <div className="flex items-center justify-between text-slate-400 text-xs">
+                <span>Total Chat Messages</span>
+                <MessageSquare className="w-4 h-4 text-purple-400" />
+              </div>
+              <div className="text-2xl font-bold text-purple-400 tracking-tight">
+                {isLoading ? (
+                  <div className="h-7 w-16 bg-slate-800 animate-pulse rounded" />
+                ) : (
+                  stats?.chat.totalMessages.toLocaleString() ?? '0'
+                )}
+              </div>
+              <p className="text-[11px] text-slate-400">
+                User questions &amp; AI answers
               </p>
             </div>
           </div>
@@ -284,22 +283,6 @@ export default function AdminDashboardPage() {
               </div>
             </div>
 
-            {/* Card: Total Chat Messages */}
-            <div className="p-5 rounded-2xl bg-slate-900/40 border border-slate-800/80 flex items-center justify-between">
-              <div>
-                <span className="text-xs text-slate-400">Total Chat Messages</span>
-                <div className="text-xl font-bold text-purple-400 mt-1">
-                  {isLoading ? '...' : `${stats?.chat.totalMessages ?? 0} Messages`}
-                </div>
-                <p className="text-[11px] text-slate-500 mt-0.5">
-                  Logged in MongoDB with citation excerpts
-                </p>
-              </div>
-              <div className="p-3 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
-                <MessageSquare className="w-5 h-5" />
-              </div>
-            </div>
-
             {/* Card: Active Conversations */}
             <div className="p-5 rounded-2xl bg-slate-900/40 border border-slate-800/80 flex items-center justify-between">
               <div>
@@ -313,6 +296,22 @@ export default function AdminDashboardPage() {
               </div>
               <div className="p-3 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
                 <MessageCircle className="w-5 h-5" />
+              </div>
+            </div>
+
+            {/* Card: Uploaded Documents */}
+            <div className="p-5 rounded-2xl bg-slate-900/40 border border-slate-800/80 flex items-center justify-between">
+              <div>
+                <span className="text-xs text-slate-400">Uploaded Documents</span>
+                <div className="text-xl font-bold text-amber-400 mt-1">
+                  {isLoading ? '...' : `${stats?.documents.uploaded ?? 0} Documents`}
+                </div>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  Awaiting background extraction pipeline
+                </p>
+              </div>
+              <div className="p-3 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                <FileText className="w-5 h-5" />
               </div>
             </div>
           </div>
@@ -329,6 +328,14 @@ export default function AdminDashboardPage() {
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-1">
+              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 text-center">
+                <span className="text-[11px] text-slate-400">Uploaded</span>
+                <div className="text-lg font-bold text-amber-400 mt-1">
+                  {stats?.documents.uploaded ?? 0}
+                </div>
+                <span className="text-[10px] text-slate-500">Awaiting extraction</span>
+              </div>
+
               <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 text-center">
                 <span className="text-[11px] text-slate-400">Processing</span>
                 <div className="text-lg font-bold text-amber-400 mt-1">
@@ -354,19 +361,11 @@ export default function AdminDashboardPage() {
               </div>
 
               <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 text-center">
-                <span className="text-[11px] text-slate-400">Failed Processing</span>
+                <span className="text-[11px] text-slate-400">Failed</span>
                 <div className="text-lg font-bold text-rose-400 mt-1">
                   {stats?.documents.failed ?? 0}
                 </div>
-                <span className="text-[10px] text-slate-500">Corrupted / No text</span>
-              </div>
-
-              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 text-center">
-                <span className="text-[11px] text-slate-400">Indexing Failures</span>
-                <div className="text-lg font-bold text-rose-400 mt-1">
-                  {stats?.documents.indexingFailed ?? 0}
-                </div>
-                <span className="text-[10px] text-slate-500">Qdrant retry eligible</span>
+                <span className="text-[10px] text-slate-500">Processing errors</span>
               </div>
             </div>
           </div>
@@ -436,9 +435,13 @@ export default function AdminDashboardPage() {
                 <RefreshCw className="w-6 h-6 animate-spin text-purple-400" />
                 <p className="text-xs">Loading activity stream...</p>
               </div>
+            ) : activities.length === 0 ? (
+              <div className="py-12 text-center text-slate-500 text-xs">
+                No recent activity found.
+              </div>
             ) : filteredActivities.length === 0 ? (
               <div className="py-12 text-center text-slate-500 text-xs">
-                No activity recorded matching this filter.
+                No recent activity found matching this filter.
               </div>
             ) : (
               <div className="divide-y divide-slate-800/60 max-h-[480px] overflow-y-auto pr-2">

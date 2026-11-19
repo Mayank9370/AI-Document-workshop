@@ -548,27 +548,22 @@ data: {"messageId":"6afecf56...","content":"...","citations":[...],"createdAt":"
   - Client-side RBAC protection at `/dashboard/admin`: renders a 403 Access Denied screen for regular users with a redirect button back to the workspace.
   - Dynamic `Navbar`: The "Admin Dashboard" navigation link is rendered only when `user.role === 'admin'`.
 
-### 10.2 User Activity Tracking (`lastActiveAt`)
-- **Field & Indexing**: `lastActiveAt?: Date` indexed in `UserModel` (`{ lastActiveAt: 1 }`).
-- **Throttled Background Updates**: `authenticate` middleware throttles database writes to a maximum of once every 5 minutes per user using an in-memory cache, eliminating unnecessary write load on high-frequency API calls.
-- **Login Tracking**: Updated immediately whenever a user authenticates via `POST /api/auth/login`.
-- **Active Users Metric**: Defined strictly as `lastActiveAt >= new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)` (active within the last 30 days).
-
-### 10.3 Admin Endpoints & SaaS Metrics Aggregation
+### 10.2 Admin Endpoints & SaaS Metrics Aggregation
 | Method | Endpoint | RBAC Guard | Description |
 | :--- | :--- | :--- | :--- |
-| `GET` | `/api/admin/stats` | `admin` only | Comprehensive SaaS platform statistics across users, documents, and chat |
-| `GET` | `/api/admin/activity` | `admin` only | Real-time platform audit feed merging user, document, and chat activity |
+| `GET` | `/api/admin/stats` | `admin` only | Comprehensive SaaS platform statistics across users, documents, and chat (100% database-backed) |
+| `GET` | `/api/admin/activity` | `admin` only | Real-time platform audit feed merging actual user, document, and chat activity |
 
 #### Statistics Payload Breakdown (`/api/admin/stats`):
-- **Users**: `total`, `active` (last 30d), `new7d` (registered in last 7 days), `new30d` (registered in last 30 days).
-- **Documents**: `total`, `processing`, `ready`, `failed`, `indexed`, `indexingFailed`.
+- **Users**: `total`, `new7d` (registered in last 7 days), `new30d` (registered in last 30 days). *(Note: Active users metric was completely removed to ensure only 100% verifiable database metrics are displayed).*
+- **Documents**: `total`, `uploaded`, `processing`, `ready`, `failed`, `indexed`, `indexingFailed`.
 - **Chat**: `totalMessages`, `totalConversations` (distinct `(userId, documentId)` conversation pairs via MongoDB `$group` aggregation).
 
 #### Activity Feed Payload Breakdown (`/api/admin/activity`):
-- Aggregates real events from MongoDB: user registrations, document uploads/indexing status, and chat messages.
+- Aggregates real events from MongoDB: user registrations (`User`), document uploads/indexing status (`DocumentModel`), and chat messages (`ChatMessage`).
 - Supports category filtering via `?category=user|document|chat`.
 - Clamped pagination via `?limit=N` (default 20, max 50).
+- Empty state: Displays "No recent activity found." when collections have no events.
 - **Zero Sensitive Data**: Sensitive fields (`password`, password hashes, tokens) are completely stripped and excluded from all responses.
 
 ---
@@ -609,8 +604,8 @@ All 20 tests verify:
 5. Unauthenticated request to `/api/admin/activity` rejected with HTTP 401.
 6. Regular user receives HTTP 403 Forbidden on `/api/admin/activity`.
 7. Total registered users count accurately calculated.
-8. Active users count strictly enforces 30-day activity window (`lastActiveAt >= now - 30d`).
-9. Inactive users (>30 days) are correctly excluded from active users count.
+8. Active users metric is completely removed from /api/admin/stats response.
+9. Uploaded documents metric accurately matches MongoDB count.
 10. New users in last 7 days and 30 days calculated accurately.
 11. Document processing status metrics (total, processing, ready, failed) match DB.
 12. Vector indexing metrics (indexed, failed) match DB.

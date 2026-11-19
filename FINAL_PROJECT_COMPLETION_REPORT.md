@@ -20,7 +20,7 @@ The **AI Document Workspace** is a production-grade full-stack monorepo designed
 - **Sliding Conversation Memory**: In-memory Redis sliding window preserving the latest 6 messages with a 1-hour rolling TTL and resilient MongoDB fallback.
 - **Atomic Chat Rate Limiting**: Redis Lua script enforcing a quota of 10 requests per minute per user with `HTTP 429 Too Many Requests` and `Retry-After` headers.
 - **Cursor-Based Pagination**: URL-safe Base64URL composite cursors `(createdAt, _id)` across documents and chat history, supported by compound database indexes.
-- **Administrative Intelligence Dashboard**: Centralized SaaS statistics (`/dashboard/admin`), user activity tracking (`lastActiveAt` throttled to 5 minutes), document pipeline telemetry, and live platform audit log.
+- **Administrative Intelligence Dashboard**: Centralized verified SaaS statistics (`/dashboard/admin`), document pipeline telemetry (`uploaded`, `processing`, `ready`, `indexed`, `failed`), chat message/conversation counters, and live platform audit log.
 
 ### Technology Stack
 - **Frontend**: Next.js 14 (App Router), TypeScript, Tailwind CSS, Lucide React, React Context
@@ -44,7 +44,7 @@ The **AI Document Workspace** is a production-grade full-stack monorepo designed
 | **Phase 7** | Conversational RAG & SSE Streaming | LangChain RAG pipeline, real-time SSE token streaming (`start`, `token`, `citations`, `done`), anti-hallucination grounded prompts, deterministic page citations, client abort handling. |
 | **Phase 8** | Redis Memory & Chat Rate Limiting | Sliding conversation memory (6 messages, 1h rolling TTL, authoritative MongoDB fallback), atomic Redis Lua rate limiter (10 req/min per user, HTTP 429, Retry-After header, fail-closed 503). |
 | **Phase 9** | Cursor-Based Pagination | Base64URL composite cursors `(createdAt, _id)`, compound MongoDB indexes, limit clamping (max 50), multi-tenant isolation, frontend load-more & prepend integrations. |
-| **Phase 10** | Admin Dashboard & Final Integration | Admin-only APIs (`/api/admin/stats`, `/api/admin/activity`), user activity tracking (`lastActiveAt` with 5-minute throttle, 30-day active definition), client-side 403 guard, SaaS cards, activity feed. |
+| **Phase 10** | Admin Dashboard & Verifiable Metrics | Admin-only APIs (`/api/admin/stats`, `/api/admin/activity`), removal of unverified active user metrics, 100% database-backed document pipeline counts (`uploaded`, `processing`, `ready`, `failed`), client-side 403 guard, verified SaaS cards, activity feed with proper empty states. |
 | **Phase 11** | Final Verification, Audit & Publication | Full-stack regression (164 tests), Docker Compose audit, secret scanning, repository preparation, and clean push to GitHub. |
 
 ---

@@ -140,13 +140,13 @@ export interface ChatHistoryResponse {
 
 export interface AdminUserStats {
   total: number;
-  active: number;
   new7d: number;
   new30d: number;
 }
 
 export interface AdminDocumentStats {
   total: number;
+  uploaded: number;
   processing: number;
   ready: number;
   failed: number;

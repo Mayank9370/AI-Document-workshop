@@ -393,23 +393,18 @@ async function runPhase10Tests() {
     );
 
     // =========================================================================
-    // TEST 8 & 9: Active User Count & 30-Day Definition
+    // TEST 8 & 9: Removal of Unreliable Active Users & Verification of Uploaded Status
     // =========================================================================
-    console.log('\n--- Tests 8-9: Active Users (30-day definition) ---');
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-    const expectedActiveUsers = await UserModel.countDocuments({
-      lastActiveAt: { $gte: thirtyDaysAgo },
-    });
-
+    console.log('\n--- Tests 8-9: Unreliable Metrics Removal & Uploaded Document Metric ---');
     assert(
-      stats.users.active === expectedActiveUsers,
-      `[Phase 10 - Test 8] Active users count (${stats.users.active}) follows 30-day activity window (${expectedActiveUsers}).`
+      (stats.users as any).active === undefined,
+      `[Phase 10 - Test 8] Active users metric is completely removed from /api/admin/stats response.`
     );
 
-    const isInactiveCounted = stats.users.active < stats.users.total;
+    const expectedUploadedDocs = await DocumentModel.countDocuments({ status: 'uploaded' });
     assert(
-      isInactiveCounted,
-      `[Phase 10 - Test 9] Inactive user (>30 days) is correctly excluded from active users count.`
+      stats.documents.uploaded === expectedUploadedDocs,
+      `[Phase 10 - Test 9] Uploaded documents metric (${stats.documents.uploaded}) matches MongoDB (${expectedUploadedDocs}).`
     );
 
     // =========================================================================
@@ -417,6 +412,7 @@ async function runPhase10Tests() {
     // =========================================================================
     console.log('\n--- Test 10: New Users in last 7 and 30 days ---');
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     const expectedNew7d = await UserModel.countDocuments({
       createdAt: { $gte: sevenDaysAgo },
     });

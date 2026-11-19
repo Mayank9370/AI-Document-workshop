@@ -92,7 +92,162 @@ flowchart LR
 
 ---
 
-## 2. Technology Stack
+## 2. 🚀 Quickstart: How to Run This Project
+
+Follow these steps to get the full application up and running locally in under 5 minutes.
+
+### 2.1 Prerequisites
+Before starting, ensure you have:
+- **Node.js**: v20+ or v22+ LTS (`node -v`)
+- **Docker & Docker Compose**: Docker Desktop or Docker Engine (`docker compose version`)
+- **MongoDB Atlas Cluster**: A free MongoDB Atlas connection string (`mongodb+srv://...`)
+- **Google Gemini API Key**: A free API key from [Google AI Studio](https://aistudio.google.com/app/apikey)
+
+---
+
+### 2.2 Step-by-Step Setup
+
+#### Step 1: Clone the Repository
+```bash
+git clone https://github.com/Mayank9370/AI-Document-workshop.git
+cd AI-Document-workshop
+```
+
+#### Step 2: Install Dependencies
+Install packages for both backend and frontend:
+```bash
+# Install backend packages
+cd backend
+npm install
+
+# Install frontend packages
+cd ../frontend
+npm install
+cd ..
+```
+
+#### Step 3: Configure Environment Variables
+
+1. **Backend Configuration** (`backend/.env`):
+   Create `backend/.env` (or copy from `backend/.env.example`):
+   ```bash
+   cp backend/.env.example backend/.env
+   ```
+   Open `backend/.env` and update with your credentials:
+   ```env
+   PORT=5000
+   NODE_ENV=development
+   FRONTEND_URL=http://localhost:3000
+
+   # Your MongoDB Atlas connection URI
+   MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/AI?retryWrites=true&w=majority
+
+   # Docker Redis & Qdrant endpoints (leave defaults for local Docker)
+   REDIS_URL=redis://localhost:6379
+   QDRANT_URL=http://localhost:6333
+
+   # Google Gemini API Key (Backend-only, never exposed to browser)
+   GEMINI_API_KEY=your_gemini_api_key_here
+   GEMINI_CHAT_MODEL=gemini-flash-lite-latest
+   GEMINI_EMBEDDING_MODEL=gemini-embedding-001
+   EMBEDDING_DIMENSION=768
+
+   # JWT Secret (min 32 characters)
+   JWT_SECRET=your-super-secret-jwt-key-min-32-chars-long!
+   JWT_EXPIRES_IN=1d
+
+   # Upload directory
+   UPLOAD_DIR=uploads
+   ```
+
+2. **Frontend Configuration** (`frontend/.env.local`):
+   Create `frontend/.env.local` (or copy from `frontend/.env.example`):
+   ```bash
+   cp frontend/.env.example frontend/.env.local
+   ```
+   Contents:
+   ```env
+   NEXT_PUBLIC_API_URL=http://localhost:5000/api
+   ```
+
+#### Step 4: Start Redis & Qdrant with Docker
+Run the background infrastructure containers (Redis for cache/rate-limiting, Qdrant for vector embeddings):
+```bash
+docker compose up -d redis qdrant
+```
+Verify containers are running:
+```bash
+docker compose ps
+```
+Both `ai-workspace-redis` (port 6379) and `ai-workspace-qdrant` (port 6333) should report status `Up (healthy)`.
+
+#### Step 5: Seed the Initial Admin Account
+Run the automated CLI seeding script from the `backend` directory:
+```bash
+cd backend
+npx tsx src/scripts/seedAdmin.ts --email=admin@workspace.internal --password=AdminPassword123! --name="Platform Administrator"
+cd ..
+```
+*(This safely creates or updates the admin account without duplicates).*
+
+#### Step 6: Start the Development Servers
+
+Open **two separate terminal windows**:
+
+- **Terminal 1: Start Backend API**
+  ```bash
+  cd backend
+  npm run dev
+  ```
+  Backend starts at: `http://localhost:5000`  
+  Health status check: `http://localhost:5000/api/health`
+
+- **Terminal 2: Start Next.js Frontend**
+  ```bash
+  cd frontend
+  npm run dev
+  ```
+  Web UI accessible at: **`http://localhost:3000`**
+
+---
+
+### 2.3 Accessing the Application
+
+1. **User Workspace (`http://localhost:3000`)**:
+   - Click **Register** to create a standard user account.
+   - Drag-and-drop or upload a PDF document (up to 10 MB).
+   - Watch the status transition: `Uploaded` ➔ `Processing` ➔ `Ready` ➔ `Indexed`.
+   - Click **Chat** to enter the real-time AI conversation with Server-Sent Events (SSE) streaming and page-level citations.
+
+2. **Admin Dashboard (`http://localhost:3000/login`)**:
+   - Log in with the seeded admin credentials:
+     - **Email:** `admin@workspace.internal`
+     - **Password:** `AdminPassword123!`
+   - A purple **"Admin Dashboard"** button will appear in the top navbar.
+   - Click it or visit **`http://localhost:3000/dashboard/admin`** to view real-time SaaS statistics, document pipeline status breakdown, and the live platform audit log.
+
+---
+
+### 2.4 Running the Test Suites (164 Automated Tests)
+To verify all 164 automated assertions across all phases:
+```bash
+cd backend
+
+# Run individual phase test suites:
+npm run test:auth      # Phase 3: Authentication & RBAC (9 tests)
+npm run test:docs      # Phase 4: PDF Ingestion & Document CRUD (11 tests)
+npm run test:phase5    # Phase 5: Text Extraction, Chunker & Embeddings (29 tests)
+npm run test:phase6    # Phase 6: Qdrant Vector Indexing & Search (37 tests)
+npm run test:phase7    # Phase 7: Conversational RAG & SSE Streaming (18 tests)
+npm run test:phase8    # Phase 8: Redis Memory & Rate Limiter (20 tests)
+npm run test:phase9    # Phase 9: Cursor-Based Pagination (20 tests)
+npm run test:phase10   # Phase 10: Admin Dashboard & Real DB Metrics (20 tests)
+```
+*(All 164 tests pass with a 100% success rate against live infrastructure).*
+
+---
+
+## 3. Technology Stack
 
 ### Frontend
 - **Framework:** Next.js 14 (App Router)
@@ -122,7 +277,7 @@ flowchart LR
 
 ---
 
-## 3. Folder Structure
+## 4. Folder Structure
 
 ```
 ai-document-workspace/
@@ -243,7 +398,7 @@ ai-document-workspace/
 
 ---
 
-## 4. Authentication & RBAC APIs
+## 5. Authentication & RBAC APIs
 
 | Method | Endpoint | Access | Description |
 | :--- | :--- | :--- | :--- |
@@ -255,7 +410,7 @@ ai-document-workspace/
 
 ---
 
-## 5. Document Management APIs (Phase 4)
+## 6. Document Management APIs (Phase 4)
 
 | Method | Endpoint | Access | Description |
 | :--- | :--- | :--- | :--- |
@@ -274,9 +429,9 @@ ai-document-workspace/
 
 ---
 
-## 6. PDF Processing, Chunking & Gemini Embedding Pipeline (Phase 5)
+## 7. PDF Processing, Chunking & Gemini Embedding Pipeline (Phase 5)
 
-### 6.1 PDF Text Extraction (`pdfExtractor.ts`)
+### 7.1 PDF Text Extraction (`pdfExtractor.ts`)
 - Utilizes the modern `pdf-parse` v2 `PDFParse` class to parse uploaded PDF binaries page by page.
 - Extracts per-page text objects: `{ pageNumber: number, text: string }`.
 - Preserves accurate page numbering across multi-page documents.
@@ -284,7 +439,7 @@ ai-document-workspace/
 - Catches password-protected and corrupted/malformed PDFs and translates them into user-friendly error messages while logging technical details.
 - Always releases internal PDF.js worker and memory resources in `finally { await parser.destroy(); }`.
 
-### 6.2 Text Chunking Strategy (`textChunker.ts`)
+### 7.2 Text Chunking Strategy (`textChunker.ts`)
 - **Algorithm**: Character-based sliding window with overlap applied independently within each page.
 - **Configurable Settings**:
   - `CHUNK_SIZE`: Default **900 characters** (configurable via environment variable `CHUNK_SIZE`, minimum 100).
@@ -294,7 +449,7 @@ ai-document-workspace/
 - **Page Isolation**: `chunkIndex` is scoped to each page (starting from `0`), and `pageNumber` is explicitly preserved.
 - **Short Pages & Edge Cases**: Pages shorter than `CHUNK_SIZE` generate a single concise chunk. Empty/whitespace-only pages generate 0 chunks.
 
-### 6.3 DocumentChunk Schema & Database Persistence (`documentChunk.model.ts`)
+### 7.3 DocumentChunk Schema & Database Persistence (`documentChunk.model.ts`)
 ```typescript
 {
   documentId: ObjectId,  // Reference to Document
@@ -312,13 +467,13 @@ ai-document-workspace/
   - `{ documentId: 1 }` enables rapid retrieval and cascade deletion.
 - **Vector Storage Note**: Vectors are **not** persisted in MongoDB. In accordance with architectural boundaries, embeddings are generated for indexing in Qdrant (Phase 6).
 
-### 6.4 Google Gemini Embedding Service (`embeddingService.ts`)
+### 7.4 Google Gemini Embedding Service (`embeddingService.ts`)
 - **Official SDK**: Built using `@google/generative-ai` with `TaskType.RETRIEVAL_DOCUMENT`.
 - **Model**: `gemini-embedding-001` with `outputDimensionality: 768`, producing standard 768-dimensional dense vectors matching the project `EMBEDDING_DIMENSION` configuration.
 - **Resilience**: Implements bounded retry logic (up to 3 attempts) with exponential backoff (`500ms`, `1000ms`, `2000ms`) for transient rate-limit (HTTP 429) or temporary server errors (HTTP 503).
 - **Security**: The Gemini API key remains strictly on the backend and is never sent to the client or embedded in public bundles.
 
-### 6.5 Processing Pipeline & Lifecycle Management (`documentProcessor.ts`)
+### 7.5 Processing Pipeline & Lifecycle Management (`documentProcessor.ts`)
 - **Workflow**:
   1. File uploaded -> Saved in MongoDB with `status: 'uploaded'`.
   2. Background execution triggered asynchronously via `setImmediate` without blocking client response.
@@ -334,9 +489,9 @@ ai-document-workspace/
 
 ---
 
-## 7. Qdrant Vector Indexing & Semantic Retrieval (Phase 6)
+## 8. Qdrant Vector Indexing & Semantic Retrieval (Phase 6)
 
-### 7.1 Collection Initialization & Payload Indexes (`vectorStore.ts`)
+### 8.1 Collection Initialization & Payload Indexes (`vectorStore.ts`)
 - **Collection**: `document_chunks`
 - **Vector Dimension**: `768` (matching Google Gemini `gemini-embedding-001`)
 - **Distance Metric**: `Cosine`
@@ -346,7 +501,7 @@ ai-document-workspace/
   - `documentId` (keyword)
   - `chunkId` (keyword)
 
-### 7.2 Point ID & Payload Architecture
+### 8.2 Point ID & Payload Architecture
 - **Deterministic Point ID Generation**: Point IDs are UUID v5 generated using a dedicated workspace namespace UUID (`a1b2c3d4-e5f6-7890-abcd-ef1234567890`) and the chunk's MongoDB `_id` (`chunkIdToPointId(chunkId)`).
   - Guarantees idempotent upserts: re-indexing updates points in-place without duplicating records or causing index bloat.
 - **Stored Payload Fields**:
@@ -357,12 +512,12 @@ ai-document-workspace/
   - `chunkIndex`: Chunk offset on page (0-indexed)
   - `text`: Extracted chunk text segment
 
-### 7.3 Google Gemini Dual-Task Embedding (`embeddingService.ts`)
+### 8.3 Google Gemini Dual-Task Embedding (`embeddingService.ts`)
 - `TaskType.RETRIEVAL_DOCUMENT`: Used for chunk embeddings when indexing documents (`embedDocument`).
 - `TaskType.RETRIEVAL_QUERY`: Used for search query embeddings when performing semantic search (`embedQuery`).
 - Both paths enforce `outputDimensionality: 768` and retry resilience (up to 3 attempts with exponential backoff).
 
-### 7.4 Indexing Lifecycle & Concurrency Controls
+### 8.4 Indexing Lifecycle & Concurrency Controls
 - **Document Model Indexing Fields**:
   - `indexingStatus`: `'pending' | 'indexing' | 'indexed' | 'failed'`
   - `indexedChunkCount`: Number of vectors successfully indexed in Qdrant
@@ -373,7 +528,7 @@ ai-document-workspace/
 - **Bounded Batch Upserts**: Chunks are embedded and upserted in bounded batches of 20 points, minimizing memory overhead and avoiding payload timeouts.
 - **Crash Recovery**: `resetStuckIndexingDocuments()` runs on server startup, converting any documents stranded in `'indexing'` status into `'failed'`.
 
-### 7.5 Semantic Retrieval & Strict Tenant Isolation
+### 8.5 Semantic Retrieval & Strict Tenant Isolation
 - **Endpoint**: `POST /api/documents/:id/search`
 - **Request Body**: `{ query: string, limit?: number }` (default limit: 5, max: 50)
 - **Response Format**:
@@ -405,15 +560,15 @@ ai-document-workspace/
   Points belonging to other users or other documents are excluded by Qdrant's query engine before scoring.
 - **MongoDB Fallback**: If vector search fails or returns zero matches, a text fallback query executes against MongoDB chunks.
 
-### 7.6 Re-indexing & Cascade Deletion
+### 8.6 Re-indexing & Cascade Deletion
 - **Re-indexing Endpoint**: `POST /api/documents/:id/reindex` allows users to manually re-index documents if indexing failed or needs refreshing.
 - **Cascade Vector Deletion**: When a user deletes a document via `DELETE /api/documents/:id`, `deletePointsByDocumentId(documentId)` automatically deletes all corresponding Qdrant points using the `documentId` payload index filter.
 
 ---
 
-## 8. Conversational RAG & AI Chat with SSE Streaming (Phase 7)
+## 9. Conversational RAG & AI Chat with SSE Streaming (Phase 7)
 
-### 8.1 Conversational RAG Architecture & Flow (`chat.service.ts`)
+### 9.1 Conversational RAG Architecture & Flow (`chat.service.ts`)
 ```
 User Question ──► authenticate ──► Verify Ownership & Ready/Indexed
                       │
@@ -440,12 +595,12 @@ User Question ──► authenticate ──► Verify Ownership & Ready/Indexed
           event: done { messageId, content, citations }
 ```
 
-### 8.2 Grounded Anti-Hallucination Prompt Design
+### 9.2 Grounded Anti-Hallucination Prompt Design
 - **Strict Grounding**: The AI model is strictly instructed to answer based solely on the provided document excerpts.
 - **Missing Information Guarantee**: If the document excerpts do not contain the answer to the user's question, the assistant explicitly responds: *"The uploaded document does not contain sufficient information to answer this question."*
 - **No Hallucinated Citations**: The model is prohibited from inventing page numbers or chunk IDs. Source citations are computed deterministically by the backend.
 
-### 8.3 Server-Sent Events (SSE) Protocol & Endpoints
+### 9.3 Server-Sent Events (SSE) Protocol & Endpoints
 
 | Method | Endpoint | Access | Description |
 | :--- | :--- | :--- | :--- |
@@ -470,12 +625,12 @@ event: done
 data: {"messageId":"6afecf56...","content":"...","citations":[...],"createdAt":"2026-11-19T10:28:38.726Z"}
 ```
 
-### 8.4 Deterministic Citation Generation (`buildCitations`)
+### 9.4 Deterministic Citation Generation (`buildCitations`)
 - Citations are derived exclusively from actual retrieved Qdrant chunk points (`chunkId`, `pageNumber`, `chunkIndex`, `text`).
 - Deduplicates page numbers so users receive clear, distinct source citations (e.g. `Source: Page 1`).
 - The frontend provides clickable citation badges that expand to reveal the exact supporting text excerpt from the document.
 
-### 8.5 ChatMessage Schema & Indexing (`chat.model.ts`)
+### 9.5 ChatMessage Schema & Indexing (`chat.model.ts`)
 ```typescript
 {
   userId: ObjectId,       // Reference to User (indexed)
@@ -497,38 +652,38 @@ data: {"messageId":"6afecf56...","content":"...","citations":[...],"createdAt":"
   - `{ documentId: 1, userId: 1, createdAt: 1 }`: Optimized for chronological chat history rendering.
   - `{ userId: 1, createdAt: -1 }`: Rapid user-specific query lookup.
 
-### 8.6 Client Disconnection & Lifecycle Safeguards
+### 9.6 Client Disconnection & Lifecycle Safeguards
 - When a client disconnects or clicks the "Stop" button in the frontend, `req.on('close')` fires an `AbortSignal`.
 - The generation loop terminates cleanly without server crashes.
 - Failed or aborted generations do **not** persist incomplete or misleading assistant messages to MongoDB.
 
-### 8.7 Environment Variables (Phase 7)
+### 9.7 Environment Variables (Phase 7)
 - `GEMINI_API_KEY`: Google Gemini API key (strictly backend-only; never exposed to browser bundles).
 - `GEMINI_CHAT_MODEL`: Google Gemini chat model (default: `gemini-flash-lite-latest`).
 
-### 8.8 Known Limitations & Scope Boundaries
+### 9.8 Known Limitations & Scope Boundaries
 - **No Redis Conversation Memory in Phase 7**: MongoDB Atlas is the single source of truth for chat history in this phase. Context is bounded to recent MongoDB messages.
 - **No Redis Rate Limiting**: Chat rate limiting and conversation caching belong strictly to Phase 8.
 
 ---
 
-## 9. Redis Memory, Chat Rate Limiting & Cursor Pagination (Phase 8 & Phase 9)
+## 10. Redis Memory, Chat Rate Limiting & Cursor Pagination (Phase 8 & Phase 9)
 
-### 9.1 Redis Sliding Window Conversation Memory
+### 10.1 Redis Sliding Window Conversation Memory
 - **Memory Key Scheme**: `chat:memory:{userId}:{documentId}`.
 - **Sliding Window**: Strictly bounds chat context to the latest 6 messages (`user` and `assistant` pairs).
 - **TTL Strategy**: 1-hour (3600s) rolling TTL refreshed automatically on every successful chat turn.
 - **MongoDB Fallback**: Cache misses or key expirations seamlessly query authoritative MongoDB records and repopulate Redis memory.
 - **Resilience**: Malformed or corrupted Redis payloads are caught safely with immediate MongoDB fallback without crashing the process.
 
-### 9.2 Atomic Chat Rate Limiting (Redis Lua)
+### 10.2 Atomic Chat Rate Limiting (Redis Lua)
 - **Quota**: Strictly enforced limit of 10 chat requests per 60 seconds per user.
 - **Atomic Lua Script**: Evaluates and increments sliding counter atomically in Redis.
 - **Headers & Status**: HTTP 429 Too Many Requests with `Retry-After` header when limit exceeded.
 - **Fail-Closed Security**: Redis downtime triggers safe HTTP 503 Service Unavailable to protect LLM infrastructure from unmetered surges.
 - **Exclusions**: Read-only history pagination (`GET /api/chat/:documentId/messages`) is excluded from rate limiting.
 
-### 9.3 Cursor-Based Pagination
+### 10.3 Cursor-Based Pagination
 - **Format**: URL-safe Base64URL encoding of composite payload `{ createdAt, id }`.
 - **Compound Sorting**: Sorted by `createdAt: -1, _id: -1` for stable pagination without duplicates or skipped records across deep pagination.
 - **Compound Database Indexes**:
@@ -538,9 +693,9 @@ data: {"messageId":"6afecf56...","content":"...","citations":[...],"createdAt":"
 
 ---
 
-## 10. Admin Dashboard & Role-Based Access Control (Phase 10)
+## 11. Admin Dashboard & Role-Based Access Control (Phase 10)
 
-### 10.1 Architecture & Role Segregation
+### 11.1 Architecture & Role Segregation
 - **Strict Role-Based Access Control**:
   - Endpoints (`/api/admin/stats` and `/api/admin/activity`) are gated by `authenticate` and `authorize('admin')` middleware.
   - Unauthenticated requests receive `HTTP 401 Unauthorized`.
@@ -548,7 +703,7 @@ data: {"messageId":"6afecf56...","content":"...","citations":[...],"createdAt":"
   - Client-side RBAC protection at `/dashboard/admin`: renders a 403 Access Denied screen for regular users with a redirect button back to the workspace.
   - Dynamic `Navbar`: The "Admin Dashboard" navigation link is rendered only when `user.role === 'admin'`.
 
-### 10.2 Admin Endpoints & SaaS Metrics Aggregation
+### 11.2 Admin Endpoints & SaaS Metrics Aggregation
 | Method | Endpoint | RBAC Guard | Description |
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/admin/stats` | `admin` only | Comprehensive SaaS platform statistics across users, documents, and chat (100% database-backed) |
@@ -568,7 +723,7 @@ data: {"messageId":"6afecf56...","content":"...","citations":[...],"createdAt":"
 
 ---
 
-## 11. Seed Initial Admin Account
+## 12. Seed Initial Admin Account
 
 To safely initialize an administrator without exposing an open admin registration endpoint:
 
@@ -589,7 +744,7 @@ npm run seed:admin
 
 ---
 
-## 12. Testing & Verification Commands
+## 13. Testing & Verification Commands
 
 ### Run Full Phase 10 Admin Dashboard & RBAC Test Suite (20 Tests)
 ```bash
@@ -717,109 +872,7 @@ npm run build
 
 ---
 
-## 13. Prerequisites & Local Environment Setup
-
-### 13.1 Prerequisites
-- **Node.js**: v20.x or v22.x LTS
-- **Package Manager**: npm v10+
-- **Docker & Docker Compose**: Docker Engine v24+ with Compose v2
-- **MongoDB Atlas**: An active MongoDB Atlas database cluster connection string (or local MongoDB v7+)
-- **Google Gemini API**: A valid API key with access to `gemini-flash-lite-latest` and `gemini-embedding-001`
-
-### 13.2 Environment Configuration
-
-1. **Backend Environment**:
-   Copy `backend/.env.example` to `backend/.env`:
-   ```bash
-   cp backend/.env.example backend/.env
-   ```
-   Configure the following variables in `backend/.env`:
-   ```env
-   PORT=5000
-   NODE_ENV=development
-   FRONTEND_URL=http://localhost:3000
-   
-   # Cloud Database
-   MONGODB_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/ai_workspace?retryWrites=true&w=majority
-   
-   # Local Infrastructure (Docker Compose)
-   REDIS_URL=redis://localhost:6379
-   QDRANT_URL=http://localhost:6333
-   
-   # AI Configuration (Backend-Only)
-   GEMINI_API_KEY=your_actual_gemini_api_key_here
-   GEMINI_CHAT_MODEL=gemini-flash-lite-latest
-   GEMINI_EMBEDDING_MODEL=gemini-embedding-001
-   EMBEDDING_DIMENSION=768
-   
-   # Security & Session
-   JWT_SECRET=your_secure_jwt_secret_minimum_32_characters_long
-   JWT_EXPIRES_IN=1d
-   
-   # Uploads
-   UPLOAD_DIR=uploads
-   ```
-
-2. **Frontend Environment**:
-   Copy `frontend/.env.example` to `frontend/.env.local`:
-   ```bash
-   cp frontend/.env.example frontend/.env.local
-   ```
-   Configure:
-   ```env
-   NEXT_PUBLIC_API_URL=http://localhost:5000/api
-   ```
-
----
-
-## 14. Quickstart Guide (Step-by-Step)
-
-### Step 1: Install Dependencies
-```bash
-# Install backend dependencies
-cd backend
-npm install
-
-# Install frontend dependencies
-cd ../frontend
-npm install
-cd ..
-```
-
-### Step 2: Start Redis & Qdrant Containers
-```bash
-docker compose up -d redis qdrant
-```
-Verify containers are healthy:
-```bash
-docker compose ps
-```
-- Redis: `localhost:6379`
-- Qdrant: `localhost:6333` (REST API) & `localhost:6334` (gRPC)
-
-### Step 3: Seed Administrator Account
-```bash
-cd backend
-npx tsx src/scripts/seedAdmin.ts --email=admin@workspace.internal --password=AdminSecure123! --name="Platform Administrator"
-```
-
-### Step 4: Run the Backend API Server
-```bash
-cd backend
-npm run dev
-```
-The Express backend starts at `http://localhost:5000`. Liveness check: `http://localhost:5000/api/health`.
-
-### Step 5: Run the Next.js Frontend
-```bash
-cd frontend
-npm run dev
-```
-Open your browser at `http://localhost:3000`.
-
----
-
-## 15. Known Scope Boundaries & Technical Considerations
+## 14. Known Scope Boundaries & Technical Considerations
 
 - **Single-Document RAG Scope**: Conversational Q&A is strictly grounded in the document selected in the active conversation thread. Cross-document federated search belongs to future enhancements.
 - **Scanned Image PDFs**: Ingestion relies on text stream extraction (`pdf-parse`). Scanned image PDFs without an underlying OCR layer will be cleanly rejected with a descriptive error prompting the user to upload a text-readable PDF.

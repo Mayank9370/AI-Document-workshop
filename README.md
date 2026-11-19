@@ -24,29 +24,29 @@ A production-grade, monorepo architecture for an **AI-powered Document Workspace
 flowchart TD
     subgraph Client ["Client Tier (Next.js 14 App Router)"]
         UserBrowser["User Browser"]
-        AuthPages["Auth UI (/login, /register)"]
-        UserDashboard["User Workspace (/dashboard)"]
-        ChatUI["Streaming Chat UI (/dashboard/documents/:id/chat)"]
-        AdminDashboard["Admin Dashboard (/dashboard/admin)"]
+        AuthPages["Auth UI: /login, /register"]
+        UserDashboard["User Workspace: /dashboard"]
+        ChatUI["Streaming Chat UI: /documents/:id/chat"]
+        AdminDashboard["Admin Dashboard: /dashboard/admin"]
     end
 
-    subgraph BackendAPI ["Express.js Backend API (Node.js & TypeScript)"]
-        Gateway["Express Server & Middleware (Helmet, CORS, CookieParser)"]
-        AuthModule["Auth & RBAC Module (JWT Cookies, 5m Activity Throttle)"]
-        DocModule["Document Module (Multer, Magic Bytes Check, Page Chunker)"]
-        ChatModule["Chat & RAG Module (SSE Streamer, Citation Builder)"]
-        AdminModule["Admin Module (Metrics Aggregation & Activity Log)"]
+    subgraph BackendAPI ["Express.js Backend API (Node.js and TypeScript)"]
+        Gateway["Express Server and Middleware: Helmet, CORS, Cookies"]
+        AuthModule["Auth and RBAC Module: JWT Cookies, Activity Throttle"]
+        DocModule["Document Module: Multer, Magic Bytes, Page Chunker"]
+        ChatModule["Chat and RAG Module: SSE Streamer, Citation Builder"]
+        AdminModule["Admin Module: Metrics Aggregation and Activity Log"]
     end
 
-    subgraph Storage ["Persistence & In-Memory Tier"]
-        MongoDB[("MongoDB Atlas Cloud (Users, Docs, Chunks, Messages)")]
-        RedisCache[("Redis 7 Docker (Sliding Memory, Lua Rate Limiter)")]
-        QdrantDB[("Qdrant Vector DB Docker (768-dim Cosine Vectors)")]
+    subgraph Storage ["Persistence and In-Memory Tier"]
+        MongoDB[("MongoDB Atlas Cloud: Users, Docs, Chunks, Messages")]
+        RedisCache[("Redis 7 Docker: Sliding Memory, Lua Rate Limiter")]
+        QdrantDB[("Qdrant Vector DB Docker: 768-dim Cosine Vectors")]
     end
 
     subgraph AIServices ["Google Gemini AI Tier"]
-        GeminiEmbed["gemini-embedding-001 (768-dim TaskType.RETRIEVAL_DOCUMENT)"]
-        GeminiChat["gemini-flash-lite-latest (Conversational LLM via LangChain)"]
+        GeminiEmbed["gemini-embedding-001: 768-dim Document Embeddings"]
+        GeminiChat["gemini-flash-lite-latest: Conversational LLM via LangChain"]
     end
 
     UserBrowser --> AuthPages & UserDashboard & ChatUI & AdminDashboard
@@ -54,17 +54,17 @@ flowchart TD
 
     Gateway --> AuthModule & DocModule & ChatModule & AdminModule
 
-    AuthModule -->|User Profiles & lastActiveAt| MongoDB
-    DocModule -->|Metadata & DocumentChunks| MongoDB
-    DocModule -->|Generate Embeddings| GeminiEmbed
-    DocModule -->|Upsert Chunks with Tenant Payload| QdrantDB
+    AuthModule -->|"User Profiles and lastActiveAt"| MongoDB
+    DocModule -->|"Metadata and Document Chunks"| MongoDB
+    DocModule -->|"Generate Embeddings"| GeminiEmbed
+    DocModule -->|"Upsert Chunks with Tenant Payload"| QdrantDB
 
-    ChatModule -->|Sliding Context (Last 6 Msgs)| RedisCache
-    ChatModule -->|Multi-Tenant Semantic Retrieval| QdrantDB
-    ChatModule -->|Stream Tokens & Context| GeminiChat
-    ChatModule -->|Persist Completed Turns| MongoDB
+    ChatModule -->|"Sliding Context: Last 6 Messages"| RedisCache
+    ChatModule -->|"Multi-Tenant Semantic Retrieval"| QdrantDB
+    ChatModule -->|"Stream Tokens and Context"| GeminiChat
+    ChatModule -->|"Persist Completed Turns"| MongoDB
 
-    AdminModule -->|Aggregate SaaS Metrics| MongoDB
+    AdminModule -->|"Aggregate SaaS Metrics"| MongoDB
 ```
 
 ### 1.3 Ingestion & RAG Data Flow
@@ -72,21 +72,21 @@ flowchart TD
 ```mermaid
 flowchart LR
     subgraph Ingestion ["PDF Ingestion Flow"]
-        PDF["PDF File (<= 10MB)"] --> Multer["Multer + Magic Bytes"]
-        Multer --> PDFParse["pdf-parse (Page Extraction)"]
-        PDFParse --> Chunker["Sliding Window (900 chars, 120 overlap)"]
-        Chunker --> Embed["Gemini gemini-embedding-001"]
-        Embed --> Qdrant["Qdrant Upsert (UUID v5 Point ID)"]
+        PDF["PDF File up to 10MB"] --> Multer["Multer and Magic Bytes Validation"]
+        Multer --> PDFParse["pdf-parse: Page-by-Page Extraction"]
+        PDFParse --> Chunker["Sliding Window: 900 chars, 120 overlap"]
+        Chunker --> Embed["Gemini gemini-embedding-001: 768-dim"]
+        Embed --> Qdrant["Qdrant Upsert: UUID v5 Deterministic ID"]
     end
 
     subgraph RAGFlow ["Conversational RAG Flow"]
-        Query["User Query"] --> RateLimit["Redis Lua Rate Limit (10/min)"]
-        RateLimit --> MemLoad["Load Redis Memory (6 msgs)"]
-        MemLoad --> QueryEmbed["Gemini Query Embedding"]
-        QueryEmbed --> VectorSearch["Qdrant Search (Filter: userId + docId)"]
-        VectorSearch --> GroundedPrompt["Grounded Prompt + Citations"]
-        GroundedPrompt --> StreamSSE["Gemini Streaming (SSE)"]
-        StreamSSE --> PersistMongo["Persist Turn & Refresh TTL"]
+        Query["User Chat Query"] --> RateLimit["Redis Lua Rate Limiter: 10 req/min"]
+        RateLimit --> MemLoad["Load Redis Memory: Last 6 Messages"]
+        MemLoad --> QueryEmbed["Gemini Query Embedding: 768-dim"]
+        QueryEmbed --> VectorSearch["Qdrant Search: Tenant Isolated"]
+        VectorSearch --> GroundedPrompt["Grounded Context and Anti-Hallucination Prompt"]
+        GroundedPrompt --> StreamSSE["Gemini Streaming Response via SSE"]
+        StreamSSE --> PersistMongo["Persist Message Turn and Refresh Redis TTL"]
     end
 ```
 
